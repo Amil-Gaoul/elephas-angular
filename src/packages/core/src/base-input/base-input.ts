@@ -1,15 +1,16 @@
-import {EventEmitter, Input, Output} from '@angular/core';
-import {FormControl} from '@angular/forms';
+import {AfterContentInit, Component, ContentChild, ElementRef, Input, OnDestroy, ViewChild, ViewEncapsulation} from '@angular/core';
 import {Subscription} from 'rxjs';
 import {InputWidth} from './input-width.enum';
+import {EBaseControl} from './base-control';
+import {EDropdown} from '../dropdown';
 
-export class EBaseInput {
+@Component({
+    selector: 'e-base-input',
+    templateUrl: './base-input.html',
+    encapsulation: ViewEncapsulation.None
+})
+export class EBaseInput implements AfterContentInit, OnDestroy {
 
-    @Input() public control: FormControl = new FormControl();
-    /**
-     * Field value.
-     */
-    @Input() public value: string;
     /**
      * Additional CSS class.
      */
@@ -27,25 +28,10 @@ export class EBaseInput {
      */
     @Input() public width: InputWidth;
     /**
-     * Visual appearance.
-     */
-    @Input() public appearance: 'error' | 'default' | 'disabled' | 'readonly' = 'default';
-    /**
      * Error message. Must be set when appearance is set to error.
      */
     @Input() public error: string;
-    /**
-     * Blur handler.
-     */
-    @Output() public onBlur: EventEmitter<FocusEvent> = new EventEmitter<FocusEvent>();
-    /**
-     * Focus handler.
-     */
-    @Output() public onFocus: EventEmitter<FocusEvent> = new EventEmitter<FocusEvent>();
-    /**
-     * Change handler.
-     */
-    @Output() public onChange: EventEmitter<HTMLInputElement> = new EventEmitter<HTMLInputElement>();
+
     /**
      * @internal
      */
@@ -53,61 +39,54 @@ export class EBaseInput {
     /**
      * @internal
      */
+    public disabled: boolean;
+    /**
+     * @internal
+     */
+    public readonly: boolean;
+    /**
+     * @internal
+     */
     public inputWidth: typeof InputWidth = InputWidth;
     /**
      * @internal
      */
-    public subs: Subscription = new Subscription();
-
+    public isSelect: boolean = false;
     /**
      * @internal
      */
-    public focus(event: FocusEvent): void {
-        this.onFocus.emit(event);
-    }
+    public isDropdown: boolean = false;
 
-    /**
-     * @internal
-     */
-    public blur(event: FocusEvent): void {
-        this.onBlur.emit(event);
-    }
+    @ContentChild(EBaseControl) private control: EBaseControl;
+    @ContentChild(EDropdown) private dropdown: EDropdown;
+    @ViewChild('icon') private iconElement: ElementRef<HTMLElement>;
 
-    /**
-     * @internal
-     */
-    public input(event: Event): void {
-        const target: HTMLInputElement = <HTMLInputElement>event.target;
-        this.onChange.emit(target);
-    }
+    private subs: Subscription = new Subscription();
 
-    /**
-     * @internal
-     */
-    public setControlValue(): void {
-        if (this.value) {
-            this.control.setValue(this.value);
+    public ngAfterContentInit(): void {
+        if (this.control) {
+            this.isSelect = this.control.isSelect;
+            if (this.control.stateChanges) {
+                this.subs.add(this.control.stateChanges.subscribe((): void => {
+                    this.readonly = this.control.readonly;
+                    this.disabled = this.control.disabled;
+                }));
+            }
+
+            if (this.control.ngControl && this.control.ngControl.valueChanges) {
+                this.subs.add(this.control.ngControl.statusChanges.subscribe((status: string): void  => {
+                    this.hasError = status === 'INVALID';
+                }));
+            }
+        }
+
+        if (this.dropdown) {
+            this.isDropdown = true;
         }
     }
 
-    /**
-     * @internal
-     */
-    public setControlDisable(): void {
-        if (this.appearance === 'disabled' || this.appearance === 'readonly') {
-            this.control.disable();
-        } else {
-            this.control.enable();
-        }
-    }
-
-    /**
-     * @internal
-     */
-    public errorControlSubscribe(): void {
-        this.subs.add(this.control.statusChanges.subscribe((status: string): void => {
-            this.hasError = status === 'INVALID';
-        }));
+    public ngOnDestroy(): void {
+        this.subs.unsubscribe();
     }
 
 }

@@ -1,0 +1,39 @@
+<div
+    [class]="className"
+    [ngClass]="{
+        '_e_input': true,
+        '_e_input_appearance_disabled': disabled,
+        '_e_input_appearance_readonly': readonly,
+        '_e_input_appearance_error': hasError,
+        '_e_input_size_2': width === inputWidth.size2,
+        '_e_input_size_4': width === inputWidth.size4,
+        '_e_input_size_6': width === inputWidth.size6,
+        '_e_input_size_8': width === inputWidth.size8,
+        '_e_input_size_12': width === inputWidth.size12,
+        '_e_select': isSelect,
+        '_e_dropdown': isDropdown
+    }">
+    <label class="_e_input__field">
+        <ng-content select="input[eInput],textarea[eTextarea],select[eSelect]"></ng-content>
+        <span class="_e_input__label">{{ label }}</span>
+        <span class="_e_input__line"></span>
+        <span class="_e_input__background"></span>
+        <span
+            class="_e_input__icon"
+            [ngClass]="{
+                '_e_input__icon_passive': isSelect
+            }">
+            <ng-content select="svg"></ng-content>
+            <span
+                *ngIf="isSelect || isDropdown"
+                class="_e_select__arrow">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path id="icon/navigation/arrow_drop_down_24px" d="M8.33031 11.8617L11.2159 14.6815C11.6504 15.1062 12.3523 15.1062 12.7868 14.6815L15.6724 11.8617C16.3743 11.1758 15.873 10 14.8814 10H9.11021C8.11863 10 7.62841 11.1758 8.33031 11.8617Z"></path>
+                </svg>
+            </span>
+        </span>
+        <ng-content select="e-dropdown"></ng-content>
+    </label>
+    <span  *ngIf="hint && !hasError"  class="_e_input__hint">{{ hint }}</span>
+    <span *ngIf="hasError && error" class="_e_input__hint">{{ error }}</span>
+</div>

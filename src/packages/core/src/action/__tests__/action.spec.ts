@@ -1,24 +1,21 @@
-import {async, ComponentFixture, TestBed} from '@angular/core/testing';
+import {waitForAsync, ComponentFixture, TestBed} from '@angular/core/testing';
 import {By} from '@angular/platform-browser';
-
-import { EAction } from '../action';
+import {EAction} from '../action';
 
 describe('EAction', (): void => {
     let component: EAction;
     let fixture: ComponentFixture<EAction>;
 
-    beforeEach(async((): void => {
+    beforeEach(waitForAsync((): void => {
         TestBed.configureTestingModule({
             declarations: [ EAction ]
         })
             .compileComponents();
-    }));
 
-    beforeEach((): void => {
         fixture = TestBed.createComponent(EAction);
         component = fixture.componentInstance;
         fixture.detectChanges();
-    });
+    }));
 
     it('should create', (): void => {
         expect(component).toBeTruthy();
@@ -32,4 +29,5 @@ describe('EAction', (): void => {
         fixture.detectChanges();
         expect(component.onClick.emit).toHaveBeenCalled();
     });
+
 });
