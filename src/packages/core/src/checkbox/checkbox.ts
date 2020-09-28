@@ -1,5 +1,6 @@
-import {ChangeDetectionStrategy, Component, EventEmitter, forwardRef, Input, OnChanges, Output, SimpleChanges, ViewEncapsulation} from '@angular/core';
-import {ControlValueAccessor, FormControl, NG_VALUE_ACCESSOR} from '@angular/forms';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, forwardRef, Input, Output, ViewEncapsulation } from '@angular/core';
+import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
+import { coerceBooleanProperty } from '@angular/cdk/coercion';
 
 const noop: any = (): void => {};
 let nextUniqueId: number = 0;
@@ -18,12 +19,35 @@ export const CHECKBOX_VALUE_ACCESSOR: any = {
     encapsulation: ViewEncapsulation.None,
     changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class ECheckbox implements ControlValueAccessor, OnChanges {
+export class ECheckbox implements ControlValueAccessor {
 
     /**
      * Checkbox checked state.
      */
-    @Input() public checked: boolean = false;
+    @Input() public get checked(): boolean {
+        return this._checked;
+    }
+    public set checked(checked: boolean) {
+        this._checked = coerceBooleanProperty(checked);
+        this.cdr.markForCheck();
+    }
+    /**
+     * Checkbox indeterminate state.
+     */
+    @Input() public get indeterminate(): boolean {
+        return this._indeterminate;
+    }
+    public set indeterminate(indeterminate: boolean) {
+        if (indeterminate === this._indeterminate) {
+            return;
+        }
+
+        this._indeterminate = coerceBooleanProperty(indeterminate);
+        if (indeterminate && this._checked) {
+            this._checked = false;
+        }
+        this.cdr.detectChanges();
+    }
     /**
      * Additional CSS class.
      */
@@ -31,7 +55,13 @@ export class ECheckbox implements ControlValueAccessor, OnChanges {
     /**
      * Checkbox disabled state.
      */
-    @Input() public disabled: boolean = false;
+    @Input() public get disabled(): boolean {
+        return this._disabled;
+    }
+    public set disabled(disabled: boolean) {
+        this._disabled = coerceBooleanProperty(disabled);
+        this.cdr.detectChanges();
+    }
     /**
      * Checkbox id.
      */
@@ -43,27 +73,33 @@ export class ECheckbox implements ControlValueAccessor, OnChanges {
     /**
      * Checkbox readonly state.
      */
-    @Input() public readonly: boolean = false;
+    @Input() public get readonly(): boolean {
+        return this._readonly;
+    }
+    public set readonly(readonly: boolean) {
+        this._readonly = coerceBooleanProperty(readonly);
+        this.cdr.detectChanges();
+    }
     /**
      * Checkbox value.
      */
     @Input() public value: string = '';
-    @Input() public control: FormControl = new FormControl();
     /**
      * Change handler.
      */
-    @Output() public onChange: EventEmitter<HTMLInputElement> = new EventEmitter<HTMLInputElement>();
+    @Output() public onCheckedChange: EventEmitter<HTMLInputElement> = new EventEmitter<HTMLInputElement>();
+    /**
+     * Indeterminate handler.
+     */
+    @Output() public onIndeterminateChange: EventEmitter<boolean> = new EventEmitter<boolean>();
     private onTouchedCallback: () => void = noop;
     private onChangeCallback: (_: any) => void = noop;
+    private _checked: boolean = false;
+    private _indeterminate: boolean = false;
+    private _readonly: boolean = false;
+    private _disabled: boolean = false;
 
-    public ngOnChanges(changes: SimpleChanges): void {
-        if ('disabled' || 'readonly' in changes) {
-            if (this.disabled || this.readonly) {
-                this.control.disable();
-            } else {
-                this.control.enable();
-            }
-        }
+    constructor(private cdr: ChangeDetectorRef) {
     }
 
     /**
@@ -71,9 +107,11 @@ export class ECheckbox implements ControlValueAccessor, OnChanges {
      */
     public onCheckedChanged(event: Event): void {
         const checkbox: HTMLInputElement = event.target as HTMLInputElement;
-        this.checked = checkbox.checked;
-        this.control.setValue(this.checked);
-        this.onChange.emit(checkbox);
+        this._checked = checkbox.checked;
+        this._indeterminate = false;
+        this.onCheckedChange.emit(checkbox);
+        this.onIndeterminateChange.emit(this._indeterminate);
+        this.cdr.markForCheck();
     }
 
     /**

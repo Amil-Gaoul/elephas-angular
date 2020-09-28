@@ -12,7 +12,8 @@
         [name]="name"
         [value]="value"
         [checked]="checked"
-        [formControl]="control"
+        [disabled]="disabled || readonly"
+        [indeterminate]="indeterminate"
         (change)="onCheckedChanged($event)">
     <span class="_e_checkbox__icon"></span>
     <span class="_e_checkbox__label">
